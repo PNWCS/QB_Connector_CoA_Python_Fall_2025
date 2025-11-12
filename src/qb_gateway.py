@@ -156,17 +156,13 @@ def add_accounts_batch(company_file: str | None, terms: list[Account]) -> list[A
         acc_number = account_ret.findtext("AccountNumber") or ""
         acc_type = (account_ret.findtext("AccountType") or "").strip()
         added_accounts.append(
-<<<<<<< HEAD
-            Account(id=id, name=name, number=acc_number, AccountType=acc_type, source="quickbooks")
-=======
             Account(
                 id=id,
                 name=name,
-                acc_number=acc_number,
-                acc_type=acc_type,
+                number=acc_number,
+                AccountType=acc_type,
                 source="quickbooks",
             )
->>>>>>> f5401cccd2e413fb17959136dc4f724382e5cf74
         )
 
     return added_accounts
@@ -260,18 +256,27 @@ if __name__ == "__main__":  # pragma: no cover - manual invocation
     except Exception as e:
         print(f"Error: {e}")
         sys.exit(1)
-<<<<<<< HEAD
 
 """
 
 try:
-    acc1 = Account(id="101", name="Test Account 101", number="10101", AccountType="OtherIncome", source="quickbooks")
-    acc2 = Account(id="102", name="Test Account 102", number="20202", AccountType="OtherExpense", source="quickbooks")
+    acc1 = Account(
+        id="101",
+        name="Test Account 101",
+        number="10101",
+        AccountType="OtherIncome",
+        source="quickbooks",
+    )
+    acc2 = Account(
+        id="102",
+        name="Test Account 102",
+        number="20202",
+        AccountType="OtherExpense",
+        source="quickbooks",
+    )
     added_batch = add_accounts_batch(None, [acc1, acc2])
     for acc in added_batch:
         print(f"Added in batch: {acc}")
 except Exception as e:
-        print(f"Error: {e}")
-        sys.exit(1)
-=======
->>>>>>> f5401cccd2e413fb17959136dc4f724382e5cf74
+    print(f"Error: {e}")
+    sys.exit(1)
