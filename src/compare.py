@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from typing import Dict, Iterable
 
-from .models import ComparisonReport, Conflict, Account
+from .models import ComparisonReport
+from .models import Conflict
+from .models import Account
 
 
 def compare_account_types(
@@ -107,32 +109,219 @@ def compare_account_types(
     Note: INCOME appears in both sources with the same name, so it does not appear
     in any of the report's collections (no conflict, not Excel-only, not QB-only).
     """
-    excel_dict: Dict[str, Account] = {term.AccountType: term for term in excel_terms}
-    qb_dict: Dict[str, Account] = {term.AccountType: term for term in qb_terms}
 
-    excel_only = [term for atype, term in excel_dict.items() if atype not in qb_dict]
-    qb_only = [term for atype, term in qb_dict.items() if atype not in excel_dict]
+    excel_dict: Dict[str, Account] = {term.id: term for term in excel_terms}
+    qb_dict: Dict[str, Account] = {term.id: term for term in qb_terms}
 
-    conflicts = []
-    for atype in set(excel_dict.keys()).intersection(qb_dict.keys()):
-        excel_name = excel_dict[atype].name
-        qb_name = qb_dict[atype].name
-        if excel_name != qb_name:
+    conflicts: list[Conflict] = []
+    conflicted_ids: set[str] = set()
+    conflicted_numbers: set[str] = set()
+    conflicted_names: set[str] = set()
+
+    # Case 1: IDs match
+    for acc_id in set(excel_dict.keys()).intersection(qb_dict.keys()):
+        excel_term = excel_dict[acc_id]
+        qb_term = qb_dict[acc_id]
+
+        if (
+            excel_term.number == qb_term.number
+            and excel_term.AccountType == qb_term.AccountType
+            and excel_term.name == qb_term.name
+        ):
+            continue  # perfect match
+        elif (
+            excel_term.number == qb_term.number
+            and excel_term.AccountType == qb_term.AccountType
+            and excel_term.name != qb_term.name
+        ):
             conflicts.append(
                 Conflict(
-                    AccountType=atype,  # Updated to reflect comparison of account types
-                    id=excel_dict[atype].id,
-                    excel_name=excel_name,
-                    qb_name=qb_name,
-                    reason="name_mismatch",
+                    AccountType=excel_term.AccountType,
+                    excel_id=excel_term.id,
+                    qb_id=qb_term.id,
+                    excel_number=excel_term.number,
+                    qb_number=qb_term.number,
+                    excel_name=excel_term.name,
+                    qb_name=qb_term.name,
+                    ConflictReason="name_mismatch",
+                )
+            )
+            conflicted_ids.add(acc_id)
+        else:
+            conflicts.append(
+                Conflict(
+                    AccountType=excel_term.AccountType,
+                    excel_id=excel_term.id,
+                    qb_id=qb_term.id,
+                    excel_number=excel_term.number,
+                    qb_number=qb_term.number,
+                    excel_name=excel_term.name,
+                    qb_name=qb_term.name,
+                    ConflictReason="id_conflict",
+                )
+            )
+            conflicted_ids.add(acc_id)
+
+    # Case 2: Different IDs but same number
+    excel_numbers: Dict[str, Account] = {term.number: term for term in excel_terms}
+    qb_numbers: Dict[str, Account] = {term.number: term for term in qb_terms}
+    for num in set(excel_numbers.keys()).intersection(qb_numbers.keys()):
+        excel_term = excel_numbers[num]
+        qb_term = qb_numbers[num]
+        if excel_term.id != qb_term.id:
+            conflicts.append(
+                Conflict(
+                    AccountType=excel_term.AccountType,
+                    excel_id=excel_term.id,
+                    qb_id=qb_term.id,
+                    excel_number=excel_term.number,
+                    qb_number=qb_term.number,
+                    excel_name=excel_term.name,
+                    qb_name=qb_term.name,
+                    ConflictReason="number_conflict",
+                )
+            )
+            conflicted_numbers.add(num)
+
+    # Case 3: Different IDs but same name
+    excel_names: Dict[str, Account] = {term.name: term for term in excel_terms}
+    qb_names: Dict[str, Account] = {term.name: term for term in qb_terms}
+    for nm in set(excel_names.keys()).intersection(qb_names.keys()):
+        excel_term = excel_names[nm]
+        qb_term = qb_names[nm]
+        if excel_term.id != qb_term.id:
+            conflicts.append(
+                Conflict(
+                    AccountType=excel_term.AccountType,
+                    excel_id=excel_term.id,
+                    qb_id=qb_term.id,
+                    excel_number=excel_term.number,
+                    qb_number=qb_term.number,
+                    excel_name=excel_term.name,
+                    qb_name=qb_term.name,
+                    ConflictReason="name_conflict",
+                )
+            )
+            conflicted_names.add(nm)
+
+    # Case 4: If not in quickbooks, add to conflicts
+    excel_accounts: Dict[str, Account] = {term.id: term for term in excel_terms}
+    qb_accounts: Dict[str, Account] = {term.id: term for term in qb_terms}
+    for acc_id, excel_term in excel_accounts.items():
+        if acc_id not in qb_accounts:
+            conflicts.append(
+                Conflict(
+                    AccountType=excel_term.AccountType,
+                    excel_id=excel_term.id,
+                    qb_id=None,
+                    excel_number=excel_term.number,
+                    qb_number=None,
+                    excel_name=excel_term.name,
+                    qb_name=None,
+                    ConflictReason="only_in_excel",
                 )
             )
 
+    # Build excel_only and qb_only excluding conflicts
+    added_chart_of_accounts = [
+        term
+        for acc_id, term in excel_dict.items()
+        if acc_id not in qb_dict
+        and acc_id not in conflicted_ids
+        and term.number not in conflicted_numbers
+        and term.name not in conflicted_names
+    ]
+    qb_only = [
+        term
+        for acc_id, term in qb_dict.items()
+        if acc_id not in excel_dict
+        and acc_id not in conflicted_ids
+        and term.number not in conflicted_numbers
+        and term.name not in conflicted_names
+    ]
+
     return ComparisonReport(
-        excel_only=excel_only,
+        added_chart_of_accounts=added_chart_of_accounts,
         qb_only=qb_only,
         conflicts=conflicts,
     )
 
 
 __all__ = ["compare_account_types"]
+
+
+if __name__ == "__main__":
+    from pathlib import Path
+    from dataclasses import asdict
+    from excel_reader import extract_account
+    from qb_gateway import fetch_accounts, add_accounts_batch
+    from reporting import write_report, iso_timestamp
+
+    def count_matching_account_types(
+        excel_accounts: Iterable[Account], qb_accounts: Iterable[Account]
+    ) -> int:
+        excel_ids = {acc.id for acc in excel_accounts}
+        qb_ids = {acc.id for acc in qb_accounts}
+
+        matches = 0
+        for acc_id in excel_ids.intersection(qb_ids):
+            excel_acc = next(acc for acc in excel_accounts if acc.id == acc_id)
+            qb_acc = next(acc for acc in qb_accounts if acc.id == acc_id)
+            if excel_acc.name == qb_acc.name and excel_acc.number == qb_acc.number:
+                matches += 1
+
+        return matches
+
+    report_payload: Dict[str, object] = {
+        "status": "success",
+        "generated_at": iso_timestamp(),
+        "added_chart_of_accounts": [],
+        "conflicts": [],
+        "same_account_of_account_types": count_matching_account_types(
+            fetch_accounts(),
+            extract_account(
+                Path(
+                    "C:/Users/KieblesD/Project/QB_Connector_CoA_Python_Fall_2025/company_data.xlsx"
+                )
+            ),
+        ),
+        "error": None,
+    }
+
+    try:
+        # 1. Load Excel accounts
+        excel_accounts = extract_account(
+            Path(
+                "C:/Users/KieblesD/Project/QB_Connector_CoA_Python_Fall_2025/company_data.xlsx"
+            )
+        )
+
+        # 2. Load QuickBooks accounts
+        qb_accounts = fetch_accounts()
+
+        # 3. Compare accounts
+        report = compare_account_types(excel_accounts, qb_accounts)
+        report_payload["added_chart_of_accounts"] = [
+            asdict(acc) for acc in report.added_chart_of_accounts
+        ]
+        report_payload["conflicts"] = [
+            asdict(conflict) for conflict in report.conflicts
+        ]
+
+        # 4. Write JSON report
+        output_path = Path("reports/comparison.json")
+        write_report(report_payload, output_path)
+        print(f"Report written to {output_path}")
+
+        # 5. Add Excel-only accounts into QuickBooks
+        if report.added_chart_of_accounts:
+            print(
+                f"Adding {len(report.added_chart_of_accounts)} Excel-only accounts into QuickBooks..."
+            )
+            added = add_accounts_batch(None, report.added_chart_of_accounts)
+            for acc in added:
+                print(f"Added: {acc}")
+
+    except Exception:
+        report_payload["status"] = "error"
+        report_payload["error"] = str(exec)

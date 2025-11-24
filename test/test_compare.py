@@ -2,57 +2,72 @@ from src.compare import compare_account_types
 from src.models import Account
 
 
-def test_compare_account_types() -> None:
-    excel_terms = [
+def test_qb_only_account() -> None:
+    excel_terms: list[Account] = []
+    qb_terms: list[Account] = [
         Account(
-            AccountType="ASSET", number="10000", name="Asset", id="1", source="excel"
-        ),
-        Account(
-            AccountType="INCOME", number="11000", name="Income", id="2", source="excel"
-        ),
-        Account(
-            AccountType="EXPENSE",
-            number="12000",
-            name="Expense",
-            id="3",
-            source="excel",
-        ),
-    ]
-
-    qb_terms = [
-        Account(
-            AccountType="EXPENSE",
-            number="10000",
-            name="Expenses",
-            id="1",
-            source="quickbooks",
-        ),
-        Account(
-            AccountType="INCOME",
-            number="11000",
-            name="Income",
-            id="2",
-            source="quickbooks",
-        ),
-        Account(
+            id="5",
+            number="30000",
             AccountType="LIABILITY",
-            number="12000",
-            name="Liability",
-            id="3",
+            name="Loan",
             source="quickbooks",
-        ),
+        )
     ]
-
     result = compare_account_types(excel_terms, qb_terms)
 
-    assert len(result.excel_only) == 1
-    assert result.excel_only[0].AccountType == "ASSET"
-
+    # QB-only accounts go into qb_only
     assert len(result.qb_only) == 1
-    assert result.qb_only[0].AccountType == "LIABILITY"
+    assert result.qb_only[0].id == "5"
+    assert len(result.conflicts) == 0
 
+
+def test_name_mismatch_conflict() -> None:
+    excel_terms = [
+        Account(
+            id="1",
+            number="10000",
+            AccountType="EXPENSE",
+            name="Expense",
+            source="excel",
+        )
+    ]
+    qb_terms = [
+        Account(
+            id="1",
+            number="10000",
+            AccountType="EXPENSE",
+            name="Expenses",
+            source="quickbooks",
+        )
+    ]
+    result = compare_account_types(excel_terms, qb_terms)
+
+    # Same ID, same number, same type, but different name → conflict
     assert len(result.conflicts) == 1
-    assert result.conflicts[0].AccountType == "EXPENSE"
-    assert result.conflicts[0].excel_name == "Expense"
-    assert result.conflicts[0].qb_name == "Expenses"
-    assert result.conflicts[0].reason == "name_mismatch"
+    conflict = result.conflicts[0]
+    assert conflict.ConflictReason == "name_mismatch"
+    assert conflict.excel_name == "Expense"
+    assert conflict.qb_name == "Expenses"
+
+
+def test_perfect_match() -> None:
+    excel_terms = [
+        Account(
+            id="2", number="40000", AccountType="INCOME", name="Income", source="excel"
+        )
+    ]
+    qb_terms = [
+        Account(
+            id="2",
+            number="40000",
+            AccountType="INCOME",
+            name="Income",
+            source="quickbooks",
+        )
+    ]
+    result = compare_account_types(excel_terms, qb_terms)
+
+    # Perfect match → no conflicts, no excel_only, no qb_only
+    assert len(result.added_chart_of_accounts) == 0
+    assert len(result.qb_only) == 0
+    assert len(result.conflicts) == 0

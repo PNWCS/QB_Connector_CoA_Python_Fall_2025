@@ -7,7 +7,15 @@ from typing import Literal
 
 
 SourceLiteral = Literal["excel", "quickbooks"]
-ConflictReason = Literal["name_mismatch", "missing_in_excel", "missing_in_quickbooks"]
+ConflictReason = Literal[
+    "name_mismatch",
+    "missing_in_excel",
+    "missing_in_quickbooks",
+    "name_conflict",
+    "number_conflict",
+    "id_conflict",
+    "only_in_excel",
+]
 
 
 @dataclass(slots=True)
@@ -21,22 +29,25 @@ class Account:
     source: SourceLiteral
 
 
-@dataclass(slots=True)
+@dataclass
 class Conflict:
-    """Describes a discrepancy between Excel and QuickBooks accounts."""
+    """Represents a conflict between Excel and QuickBooks accounts."""
 
     AccountType: str
+    excel_id: str | None
+    qb_id: str | None
+    excel_number: str | None
+    qb_number: str | None
     excel_name: str | None
     qb_name: str | None
-    id: str
-    reason: ConflictReason
+    ConflictReason: str
 
 
 @dataclass(slots=True)
 class ComparisonReport:
     """Groups comparison outcomes for later processing."""
 
-    excel_only: list[Account] = field(default_factory=list)
+    added_chart_of_accounts: list[Account] = field(default_factory=list)
     qb_only: list[Account] = field(default_factory=list)
     conflicts: list[Conflict] = field(default_factory=list)
 
