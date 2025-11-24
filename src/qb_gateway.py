@@ -105,7 +105,7 @@ def add_accounts_batch(company_file: str | None, terms: list[Account]) -> list[A
     if not terms:
         return []
 
-    # Build the QBXML with multiple StandardTermsAddRq entries
+    # Build the QBXML with multiple AccountAddRq entries
     requests = []
     for term in terms:
         try:
@@ -119,7 +119,7 @@ def add_accounts_batch(company_file: str | None, terms: list[Account]) -> list[A
             f"    <AccountAddRq>\n"
             f"      <AccountAdd>\n"
             f"        <Name>{_escape_xml(term.name)}</Name>\n"
-            f"        <AccountType>{_escape_xml(term.AccountType)}</AccountType>\n"  # UNSURE ABOUT THIS
+            f"        <AccountType>{_escape_xml(term.AccountType)}</AccountType>\n"
             f"        <AccountNumber>{_escape_xml(term.number)}</AccountNumber>\n"
             f"        <Desc>{desc_value}</Desc>\n"
             f"      </AccountAdd>\n"
