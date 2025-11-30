@@ -45,7 +45,7 @@ def test_name_mismatch_conflict() -> None:
     # Same ID, same number, same type, but different name → conflict
     assert len(result.conflicts) == 1
     conflict = result.conflicts[0]
-    assert conflict.ConflictReason == "name_mismatch"
+    assert conflict.ConflictReason == "data_mismatch"
     assert conflict.excel_name == "Expense"
     assert conflict.qb_name == "Expenses"
 

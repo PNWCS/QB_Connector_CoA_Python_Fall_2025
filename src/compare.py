@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from typing import Dict, Iterable
 
-from .models import ComparisonReport
-from .models import Conflict
-from .models import Account
+from src.models import ComparisonReport
+from src.models import Conflict
+from src.models import Account
 
 
 def compare_account_types(
@@ -117,102 +117,84 @@ def compare_account_types(
     conflicted_numbers: set[str] = set()
     conflicted_names: set[str] = set()
 
+    # Build dictionaries for efficient lookup by number and name
+    excel_numbers: Dict[str, Account] = {term.number: term for term in excel_terms}
+    qb_numbers: Dict[str, Account] = {term.number: term for term in qb_terms}
+
+    excel_names: Dict[str, Account] = {term.name: term for term in excel_terms}
+    qb_names: Dict[str, Account] = {term.name: term for term in qb_terms}
+
     # Case 1: IDs match
     for acc_id in set(excel_dict.keys()).intersection(qb_dict.keys()):
         excel_term = excel_dict[acc_id]
         qb_term = qb_dict[acc_id]
 
         if (
-            excel_term.number == qb_term.number
+            excel_term.id == qb_term.id
+            and excel_term.number == qb_term.number
             and excel_term.AccountType == qb_term.AccountType
             and excel_term.name == qb_term.name
         ):
             continue  # perfect match
-        elif (
-            excel_term.number == qb_term.number
-            and excel_term.AccountType == qb_term.AccountType
-            and excel_term.name != qb_term.name
-        ):
-            conflicts.append(
-                Conflict(
-                    AccountType=excel_term.AccountType,
-                    excel_id=excel_term.id,
-                    qb_id=qb_term.id,
-                    excel_number=excel_term.number,
-                    qb_number=qb_term.number,
-                    excel_name=excel_term.name,
-                    qb_name=qb_term.name,
-                    ConflictReason="name_mismatch",
-                )
-            )
-            conflicted_ids.add(acc_id)
         else:
             conflicts.append(
                 Conflict(
                     AccountType=excel_term.AccountType,
-                    excel_id=excel_term.id,
-                    qb_id=qb_term.id,
+                    record_id=qb_term.id,  # Use qb_id or None
                     excel_number=excel_term.number,
                     qb_number=qb_term.number,
                     excel_name=excel_term.name,
                     qb_name=qb_term.name,
-                    ConflictReason="id_conflict",
+                    ConflictReason="data_mismatch",
                 )
             )
             conflicted_ids.add(acc_id)
 
     # Case 2: Different IDs but same number
-    excel_numbers: Dict[str, Account] = {term.number: term for term in excel_terms}
-    qb_numbers: Dict[str, Account] = {term.number: term for term in qb_terms}
     for num in set(excel_numbers.keys()).intersection(qb_numbers.keys()):
         excel_term = excel_numbers[num]
         qb_term = qb_numbers[num]
+
         if excel_term.id != qb_term.id:
             conflicts.append(
                 Conflict(
                     AccountType=excel_term.AccountType,
-                    excel_id=excel_term.id,
-                    qb_id=qb_term.id,
+                    record_id=qb_term.id,  # Use qb_id or None
                     excel_number=excel_term.number,
                     qb_number=qb_term.number,
                     excel_name=excel_term.name,
                     qb_name=qb_term.name,
-                    ConflictReason="number_conflict",
+                    ConflictReason="data_mismatch",
                 )
             )
             conflicted_numbers.add(num)
 
     # Case 3: Different IDs but same name
-    excel_names: Dict[str, Account] = {term.name: term for term in excel_terms}
-    qb_names: Dict[str, Account] = {term.name: term for term in qb_terms}
     for nm in set(excel_names.keys()).intersection(qb_names.keys()):
         excel_term = excel_names[nm]
         qb_term = qb_names[nm]
+
         if excel_term.id != qb_term.id:
             conflicts.append(
                 Conflict(
                     AccountType=excel_term.AccountType,
-                    excel_id=excel_term.id,
-                    qb_id=qb_term.id,
+                    record_id=qb_term.id,  # Use qb_id or None
                     excel_number=excel_term.number,
                     qb_number=qb_term.number,
                     excel_name=excel_term.name,
                     qb_name=qb_term.name,
-                    ConflictReason="name_conflict",
+                    ConflictReason="data_mismatch",
                 )
             )
             conflicted_names.add(nm)
 
-    # Case 4: If not in quickbooks, add to conflicts
-    excel_accounts: Dict[str, Account] = {term.id: term for term in excel_terms}
-    qb_accounts: Dict[str, Account] = {term.id: term for term in qb_terms}
-    for acc_id, excel_term in excel_accounts.items():
-        if acc_id not in qb_accounts:
+    # Case 4: If not in QuickBooks, add to conflicts
+    for acc_id, excel_term in excel_dict.items():
+        if acc_id not in qb_dict:
             conflicts.append(
                 Conflict(
                     AccountType=excel_term.AccountType,
-                    excel_id=excel_term.id,
-                    qb_id=None,
+                    record_id=None,
                     excel_number=excel_term.number,
                     qb_number=None,
                     excel_name=excel_term.name,
@@ -276,7 +258,7 @@ if __name__ == "__main__":
         "generated_at": iso_timestamp(),
         "added_chart_of_accounts": [],
         "conflicts": [],
-        "same_account_of_account_types": count_matching_account_types(
+        "same_account_types": count_matching_account_types(
             fetch_accounts(),
             extract_account(
                 Path(
@@ -321,6 +303,7 @@ if __name__ == "__main__":
             for acc in added:
                 print(f"Added: {acc}")
 
-    except Exception:
+    except Exception as e:
         report_payload["status"] = "error"
-        report_payload["error"] = str(exec)
+        report_payload["error"] = str(e)
+        print("Error occurred:", e)

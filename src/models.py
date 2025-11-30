@@ -7,15 +7,7 @@ from typing import Literal
 
 
 SourceLiteral = Literal["excel", "quickbooks"]
-ConflictReason = Literal[
-    "name_mismatch",
-    "missing_in_excel",
-    "missing_in_quickbooks",
-    "name_conflict",
-    "number_conflict",
-    "id_conflict",
-    "only_in_excel",
-]
+ConflictReason = Literal["data_mismatch", "only_in_excel"]
 
 
 @dataclass(slots=True)
@@ -34,8 +26,7 @@ class Conflict:
     """Represents a conflict between Excel and QuickBooks accounts."""
 
     AccountType: str
-    excel_id: str | None
-    qb_id: str | None
+    record_id: str | None
     excel_number: str | None
     qb_number: str | None
     excel_name: str | None

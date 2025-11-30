@@ -8,7 +8,7 @@ from openpyxl import load_workbook  # Excel file loader
 from openpyxl.cell.cell import Cell  # Excel cell type
 
 # Use absolute import so it works both as module and script from project root
-from .models import Account  # Domain model used as output
+from src.models import Account  # Domain model used as output
 
 
 def extract_account(workbook_path: Path) -> List[Account]:
