@@ -11,7 +11,7 @@ try:
 except ImportError:  # pragma: no cover
     win32com = None
 
-from models import Account
+from .models import Account
 
 APP_NAME = "Quickbooks Connector"  # do not chanege this
 

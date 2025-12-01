@@ -22,7 +22,7 @@ def extract_account(workbook_path: Path) -> List[Account]:
     workbook_path = Path(workbook_path)  # Ensure we have a Path instance
     if not workbook_path.exists():  # Validate the file exists
 
-    workbook_path = Path(workbook_path)  # Ensure we have a Path instance
+        workbook_path = Path(workbook_path)  # Ensure we have a Path instance
     if not workbook_path.exists():  # Validate the file exists
         raise FileNotFoundError(f"Workbook not found: {workbook_path}")
 
