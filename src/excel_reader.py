@@ -106,7 +106,7 @@ def extract_account(workbook_path: Path) -> List[Account]:
 
 
 __all__ = ["extract_account"]  # Public API
-
+"""
 if __name__ == "__main__":  # pragma: no cover - manual invocation
     import sys
 
@@ -123,3 +123,5 @@ if __name__ == "__main__":  # pragma: no cover - manual invocation
         print(f"Error: {e}")
         print("Usage: python src/excel_reader.py <path-to-workbook.xlsx>")
         sys.exit(1)
+
+"""

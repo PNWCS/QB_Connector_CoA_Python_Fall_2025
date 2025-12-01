@@ -7,9 +7,9 @@ from typing import Dict, Iterable
 from .models import ComparisonReport, Conflict, Account
 
 
-def compare_account_types(
-    excel_terms: Iterable[Account],
-    qb_terms: Iterable[Account],
+def compare_accounts(
+    excel_accounts: Iterable[Account],
+    qb_accounts: Iterable[Account],
 ) -> ComparisonReport:
     """Compare Excel and QuickBooks accounts and identify discrepancies.
 
@@ -100,30 +100,41 @@ def compare_account_types(
         ComparisonReport(
             excel_only=[Account(AccountType="ASSET", id="1", name="Asset", number="1000", source="excel")],
             qb_only=[Account(AccountType="LIABILITY", id="4", name="Liability", number="4000", source="quickbooks")],
-            conflicts=[AccountType="EXPENSE", id="2", excel_name="Expense", qb_name="Expenses", reason="data_mismatch"]
+            conflicts=[id= "2",
+                       excel_AccountType="EXPENSE", qb_AccountType="EXPENSE",
+                       excel_name="Expense", qb_name="Expenses", 
+                       excel_number="2000", qb_number="2000",
+                       reason="data_mismatch"]
         )
 
-    Note: INCOME appears in both sources with the same name, so it does not appear
+    Note: INCOME appears in both sources with the same data, so it does not appear
     in any of the report's collections (no conflict, not Excel-only, not QB-only).
     """
-    excel_dict: Dict[str, Account] = {term.AccountType: term for term in excel_terms}
-    qb_dict: Dict[str, Account] = {term.AccountType: term for term in qb_terms}
+    excel_dict: Dict[str, Account] = {account.id: account for account in excel_accounts}
+    qb_dict: Dict[str, Account] = {account.id: account for account in qb_accounts}
 
-    excel_only = [term for atype, term in excel_dict.items() if atype not in qb_dict]
-    qb_only = [term for atype, term in qb_dict.items() if atype not in excel_dict]
+    excel_only = [account for aID, account in excel_dict.items() if aID not in qb_dict]
+    qb_only = [account for aID, account in qb_dict.items() if aID not in excel_dict]
 
     conflicts = []
-    for atype in set(excel_dict.keys()).intersection(qb_dict.keys()):
-        excel_name = excel_dict[atype].name
-        qb_name = qb_dict[atype].name
-        if excel_name != qb_name:
+    for aID in set(excel_dict.keys()).intersection(qb_dict.keys()):
+        excel_name = excel_dict[aID].name
+        qb_name = qb_dict[aID].name
+        excel_number = excel_dict[aID].number
+        qb_number = qb_dict[aID].number
+        excel_atype = excel_dict[aID].AccountType
+        qb_atype = qb_dict[aID].AccountType
+        if excel_name != qb_name or excel_number != qb_number or excel_atype != qb_atype:
             conflicts.append(
                 Conflict(
-                    AccountType=atype,  # Updated to reflect comparison of account types
-                    id=excel_dict[atype].id,
+                    id=aID,  # Updated to reflect comparison of account types
                     excel_name=excel_name,
                     qb_name=qb_name,
-                    reason="name_mismatch",
+                    excel_number=excel_number,
+                    qb_number=qb_number,
+                    excel_AccountType=excel_atype,
+                    qb_AccountType=qb_atype,
+                    reason="data_mismatch",
                 )
             )
 
@@ -134,4 +145,4 @@ def compare_account_types(
     )
 
 
-__all__ = ["compare_account_types"]
+__all__ = ["compare_accounts"]
