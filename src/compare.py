@@ -139,7 +139,8 @@ def compare_account_types(
         else:
             conflicts.append(
                 Conflict(
-                    AccountType=excel_term.AccountType,
+                    excel_AccountType=excel_term.AccountType,
+                    qb_AccountType=qb_term.AccountType,
                     record_id=qb_term.id,  # Use qb_id or None
                     excel_number=excel_term.number,
                     qb_number=qb_term.number,
@@ -158,7 +159,8 @@ def compare_account_types(
         if excel_term.id != qb_term.id:
             conflicts.append(
                 Conflict(
-                    AccountType=excel_term.AccountType,
+                    excel_AccountType=excel_term.AccountType,
+                    qb_AccountType=qb_term.AccountType,
                     record_id=qb_term.id,  # Use qb_id or None
                     excel_number=excel_term.number,
                     qb_number=qb_term.number,
@@ -177,7 +179,8 @@ def compare_account_types(
         if excel_term.id != qb_term.id:
             conflicts.append(
                 Conflict(
-                    AccountType=excel_term.AccountType,
+                    excel_AccountType=excel_term.AccountType,
+                    qb_AccountType=qb_term.AccountType,
                     record_id=qb_term.id,  # Use qb_id or None
                     excel_number=excel_term.number,
                     qb_number=qb_term.number,
@@ -193,7 +196,8 @@ def compare_account_types(
         if acc_id not in qb_dict:
             conflicts.append(
                 Conflict(
-                    AccountType=excel_term.AccountType,
+                    excel_AccountType=excel_term.AccountType,
+                    qb_AccountType=None,  # Set to None since it does not exist in QuickBooks
                     record_id=None,
                     excel_number=excel_term.number,
                     qb_number=None,
@@ -203,23 +207,19 @@ def compare_account_types(
                 )
             )
 
-    # Build excel_only and qb_only excluding conflicts
+    # Adjust logic for added_chart_of_accounts
     added_chart_of_accounts = [
         term
         for acc_id, term in excel_dict.items()
         if acc_id not in qb_dict
-        and acc_id not in conflicted_ids
-        and term.number not in conflicted_numbers
-        and term.name not in conflicted_names
+        or any(
+            conflict.ConflictReason == "only_in_excel"
+            and conflict.excel_number == term.number
+            for conflict in conflicts
+        )
     ]
-    qb_only = [
-        term
-        for acc_id, term in qb_dict.items()
-        if acc_id not in excel_dict
-        and acc_id not in conflicted_ids
-        and term.number not in conflicted_numbers
-        and term.name not in conflicted_names
-    ]
+
+    qb_only = [term for acc_id, term in qb_dict.items() if acc_id not in excel_dict]
 
     return ComparisonReport(
         added_chart_of_accounts=added_chart_of_accounts,
@@ -258,7 +258,7 @@ if __name__ == "__main__":
         "generated_at": iso_timestamp(),
         "added_chart_of_accounts": [],
         "conflicts": [],
-        "same_account_types": count_matching_account_types(
+        "same_chart_of_account_types": count_matching_account_types(
             fetch_accounts(),
             extract_account(
                 Path(

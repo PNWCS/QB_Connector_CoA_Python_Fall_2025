@@ -25,7 +25,8 @@ class Account:
 class Conflict:
     """Represents a conflict between Excel and QuickBooks accounts."""
 
-    AccountType: str
+    excel_AccountType: str | None
+    qb_AccountType: str | None
     record_id: str | None
     excel_number: str | None
     qb_number: str | None
