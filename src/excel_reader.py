@@ -1,15 +1,17 @@
-"""Excel workbook reader for account synchronisation."""
 from __future__ import annotations
 
 from pathlib import Path  # Filesystem path management
+from typing import List  # Concrete list type for return value
+from typing import Any, Tuple  # Generic type for cell values
 
 from openpyxl import load_workbook  # Excel file loader
+from openpyxl.cell.cell import Cell  # Excel cell type
 
 # Use absolute import so it works both as module and script from project root
-from models import Account  # Domain model used as output
+from .models import Account  # Domain model used as output
 
 
-def extract_accounts(workbook_path: Path) -> list[Account]:
+def extract_account(workbook_path: Path) -> List[Account]:
     """Return payment terms parsed from the Excel workbook.
 
     Students should implement this function using ``openpyxl``. It must read the
@@ -17,6 +19,9 @@ def extract_accounts(workbook_path: Path) -> list[Account]:
     instances with ``source="excel"``, and raise :class:`FileNotFoundError`
     if the workbook cannot be located.
     """
+    workbook_path = Path(workbook_path)  # Ensure we have a Path instance
+    if not workbook_path.exists():  # Validate the file exists
+
     workbook_path = Path(workbook_path)  # Ensure we have a Path instance
     if not workbook_path.exists():  # Validate the file exists
         raise FileNotFoundError(f"Workbook not found: {workbook_path}")
@@ -36,16 +41,20 @@ def extract_accounts(workbook_path: Path) -> list[Account]:
         return []
 
     # Build a mapping from header name to its column index
-    headers = [str(header).strip() if header is not None else "" for header in headers_row]
+    headers = [
+        str(header).strip() if header is not None else "" for header in headers_row
+    ]
     header_index = {header: idx for idx, header in enumerate(headers)}
 
-    def _value(row, column_name: str):  # Helper to safely access a column
+    def _value(
+        row: Tuple[Cell, ...], column_name: str
+    ) -> Any:  # Helper to safely access a column
         idx = header_index.get(column_name)
         if idx is None or idx >= len(row):
             return None
         return row[idx]
 
-    terms: list[Account] = []  # Accumulator for valid terms
+    terms: List[Account] = []  # Accumulator for valid terms
     try:
         for row in rows:  # Iterate over each data row
             raw_id = _value(row, "ID")  # Expected ID column (e.g., number of days)
@@ -65,10 +74,14 @@ def extract_accounts(workbook_path: Path) -> list[Account]:
                 continue  # Skip blank types
             if raw_id in (None, ""):
                 continue  # Skip rows without an ID
+            if num in (None, ""):
+                continue  # Skip rows without a Number
 
             try:
-                record_id = str(int(raw_id))  # Normalise numerics (e.g., 30.0 -> "30")
-                number = str(int(num))
+                record_id = str(
+                    raw_id
+                ).strip()  # Normalise numerics (e.g., 30.0 -> "30")
+                number = str(num).strip()
             except (TypeError, ValueError):
                 record_id = str(raw_id).strip()  # Fallback to string trimming
                 number = str(num).strip()
@@ -81,7 +94,11 @@ def extract_accounts(workbook_path: Path) -> list[Account]:
             # Construct the domain object tagged as sourced from Excel
             terms.append(
                 Account(
-                    number=number, id=record_id, name=name_str, AccountType=type_str, source="excel"
+                    number=number,
+                    id=record_id,
+                    name=name_str,
+                    AccountType=type_str,
+                    source="excel",
                 )
             )
     finally:
@@ -90,17 +107,23 @@ def extract_accounts(workbook_path: Path) -> list[Account]:
     return terms  # Return the extracted list of payment terms
 
 
-__all__ = ["extract_accounts"]  # Public API
-
+__all__ = ["extract_account"]  # Public API
+"""
 if __name__ == "__main__":  # pragma: no cover - manual invocation
     import sys
 
     # Allow running as a script: poetry run python payment_terms_cli/excel_reader.py
     try:
-        terms = extract_accounts(Path(".\\company_data.xlsx"))
+        terms = extract_account(
+            Path(
+                "C:\\Users\\KieblesD\\Project\\QB_Connector_CoA_Python_Fall_2025\\company_data.xlsx"
+            )
+        )
         for term in terms:
             print(term)
     except Exception as e:
         print(f"Error: {e}")
         print("Usage: python src/excel_reader.py <path-to-workbook.xlsx>")
         sys.exit(1)
+
+"""

@@ -7,9 +7,9 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 
 try:
-    import win32com.client  # type: ignore
+    import win32com.client
 except ImportError:  # pragma: no cover
-    win32com = None  # type: ignore
+    win32com = None
 
 from models import Account
 
@@ -88,7 +88,13 @@ def fetch_accounts(company_file: str | None = None) -> list[Account]:
             continue
 
         terms.append(
-            Account(id=id, name=name, number=acc_number, AccountType=acc_type, source="quickbooks")
+            Account(
+                id=id,
+                name=name,
+                number=acc_number,
+                AccountType=acc_type,
+                source="quickbooks",
+            )
         )
 
     return terms
@@ -99,7 +105,7 @@ def add_accounts_batch(company_file: str | None, terms: list[Account]) -> list[A
     if not terms:
         return []
 
-    # Build the QBXML with multiple StandardTermsAddRq entries
+    # Build the QBXML with multiple AccountAddRq entries
     requests = []
     for term in terms:
         try:
@@ -111,7 +117,7 @@ def add_accounts_batch(company_file: str | None, terms: list[Account]) -> list[A
             f"    <AccountAddRq>\n"
             f"      <AccountAdd>\n"
             f"        <Name>{_escape_xml(term.name)}</Name>\n"
-            f"        <AccountType>{_escape_xml(term.AccountType)}</AccountType>\n"  # UNSURE ABOUT THIS
+            f"        <AccountType>{_escape_xml(term.AccountType)}</AccountType>\n"
             f"        <AccountNumber>{_escape_xml(term.number)}</AccountNumber>\n"
             f"        <Desc>{desc_value}</Desc>\n"
             f"      </AccountAdd>\n"
@@ -137,7 +143,7 @@ def add_accounts_batch(company_file: str | None, terms: list[Account]) -> list[A
     # Parse all responses
     added_accounts: list[Account] = []
     for account_ret in root.findall(".//AccountRet"):
-        id = account_ret.findtext("Desc").strip()
+        id = account_ret.findtext("Desc")
         if not id:
             continue
         try:
@@ -145,10 +151,10 @@ def add_accounts_batch(company_file: str | None, terms: list[Account]) -> list[A
         except ValueError:
             id = id.strip()
         name = (account_ret.findtext("Name") or "").strip()
-        acc_number = (account_ret.findtext("AccountNumber") or "").strip()
+        acc_number = account_ret.findtext("AccountNumber") or ""
         acc_type = (account_ret.findtext("AccountType") or "").strip()
         added_accounts.append(
-            Account(id=id, name=name, acc_number=acc_number, acc_type=acc_type, source="quickbooks")
+            Account(id=id, name=name, number=acc_number, AccountType=acc_type, source="quickbooks")
         )
 
     return added_accounts
@@ -187,8 +193,8 @@ def add_account(company_file: str | None, term: Account) -> Account:
             return Account(
                 id=term.id,
                 name=term.name,
-                acc_type=term.AccountType,
-                acc_number=term.number,
+                AccountType=term.AccountType,
+                number=term.number,
                 source="quickbooks",
             )
         raise
@@ -198,8 +204,8 @@ def add_account(company_file: str | None, term: Account) -> Account:
         return Account(
             id=term.id,
             name=term.name,
-            acc_type=term.AccountType,
-            acc_number=term.number,
+            AccountType=term.AccountType,
+            number=term.number,
             source="quickbooks",
         )
 
@@ -212,7 +218,9 @@ def add_account(company_file: str | None, term: Account) -> Account:
     acc_number = (account_ret.findtext("AccountNumber") or term.number).strip()
     acc_type = (account_ret.findtext("AccountType") or term.AccountType).strip()
 
-    return Account(id=id, name=name, acc_type=acc_type, acc_number=acc_number, source="quickbooks")
+    return Account(
+        id=id, name=name, acc_type=acc_type, acc_number=acc_number, source="quickbooks"
+    )
 
 
 def _escape_xml(value: str) -> str:
@@ -227,8 +235,13 @@ def _escape_xml(value: str) -> str:
 
 __all__ = ["fetch_accounts", "add_account", "add_accounts_batch"]
 
+
+"""
 if __name__ == "__main__":  # pragma: no cover - manual invocation
     import sys
+
+
+Simple test invocation to fetch and print accounts.
 
     try:
         qb_accounts = fetch_accounts("")
@@ -237,3 +250,16 @@ if __name__ == "__main__":  # pragma: no cover - manual invocation
     except Exception as e:
         print(f"Error: {e}")
         sys.exit(1)
+
+
+
+try:
+    acc1 = Account(id="101", name="Test Account 101", number="10101", AccountType="OtherIncome", source="quickbooks")
+    acc2 = Account(id="102", name="Test Account 102", number="20202", AccountType="OtherExpense", source="quickbooks")
+    added_batch = add_accounts_batch(None, [acc1, acc2])
+    for acc in added_batch:
+        print(f"Added in batch: {acc}")
+except Exception as e:
+        print(f"Error: {e}")
+        sys.exit(1)
+"""

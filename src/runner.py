@@ -1,39 +1,60 @@
-"""High-level orchestration for the payment term CLI."""
+"""High-level orchestration for the payment term CLI.
+
+This module coordinates the end-to-end process of reading payment terms from
+Excel, retrieving existing terms from QuickBooks, comparing both datasets,
+creating any missing terms in QuickBooks, and writing a comprehensive JSON
+report summarising the outcome.
+"""
 
 from __future__ import annotations
 
-from pathlib import Path
+from pathlib import Path  # Filesystem path handling
+from typing import Dict, List  # Type annotations for clarity
 
-from . import compare, excel_reader, qb_gateway
-from .models import Account, Conflict
-from .reporting import iso_timestamp, write_report
+from . import compare, excel_reader, qb_gateway  # Local modules used in orchestration
+from .models import Conflict, Account  # Domain types
+from .reporting import iso_timestamp, write_report  # JSON and timestamps
 
-DEFAULT_REPORT_NAME = "chart_of_accounts_report.json"
-
-
-def _account_to_dict(account: Account) -> dict[str, str, str, str]:
-    return {"id": account.id, "name": account.name, "type": account.type, "number": account.number, "source": account.source}
+DEFAULT_REPORT_NAME = "payment_terms_report.json"  # Default output filename
 
 
-def _conflict_to_dict(conflict: Conflict) -> dict[str, object]:
+def _account_to_dict(account: Account) -> Dict[str, str]:
+    """Convert a Account object into a serialisable dict.
+
+    This shape is used in the JSON report's "added_accounts" collection.
+    """
+    return {"id": account.id, "name": account.name, "number": account.number, "type": account.AccountType, "source": account.source}
+
+
+def _conflict_to_dict(conflict: Conflict) -> Dict[str, object]:
+    """Convert a Conflict object into a serialisable dict for the report."""
     return {
         "record_id": conflict.id,
         "excel_name": conflict.excel_name,
         "qb_name": conflict.qb_name,
-        "reason": conflict.reason,
+        "excel_number": conflict.excel_number,
+        "qb_number": conflict.qb_number,
+        "excel_type": conflict.excel_AccountType,
+        "qb_type": conflict.qb_AccountType,
+        "reason": conflict.reason
     }
 
 
-def _missing_in_excel_conflict(account: Account) -> dict[str, object]:
+def _missing_in_excel_conflict(term: Account) -> Dict[str, object]:
+    """Create a synthetic conflict for terms present only in QuickBooks.
+
+    In the report, terms that exist in QuickBooks but not Excel are represented
+    as conflicts with reason "missing_in_excel".
+    """
     return {
-        "record_id": account.id,
+        "record_id": term.id,
         "excel_name": None,
-        "qb_name": account.name,
+        "qb_name": term.name,
         "reason": "missing_in_excel",
     }
 
 
-def run_accounts(
+def run_chart_of_accounts(
     company_file_path: str,
     workbook_path: str,
     *,
@@ -52,8 +73,10 @@ def run_accounts(
     Returns:
         Path to the generated JSON report.
     """
+    # Choose report path: user-provided or default filename in CWD
     report_path = Path(output_path) if output_path else Path(DEFAULT_REPORT_NAME)
-    report_payload: dict[str, object] = {
+    # Initialise the report payload with default success shape
+    report_payload: Dict[str, object] = {
         "status": "success",
         "generated_at": iso_timestamp(),
         "added_terms": [],
@@ -61,20 +84,21 @@ def run_accounts(
         "error": None,
     }
 
-    # !!!!
-    #vvvvvvvvvvvvvvvvvvvvvvvvvvv MUST BE UPDATED vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-    # !!!!
-
     try:
-        excel_accounts = excel_reader.extract_accounts(Path(workbook_path))
-        qb_accounts = qb_gateway.fetch_accounts(company_file_path)
-        comparison = compare.compare_payment_terms(excel_accounts, qb_accounts)
+        # Extract terms from the Excel workbook
+        excel_terms = excel_reader.extract_account(Path(workbook_path))
+        # Fetch existing terms from QuickBooks
+        qb_terms = qb_gateway.fetch_accounts(company_file_path)
+        # Compare the two sources to find discrepancies
+        comparison = compare.compare_accounts(excel_terms, qb_terms)
 
-        added_accounts = qb_gateway.add_accounts_batch(
+        # Add any terms that exist only in Excel to QuickBooks in a batch
+        added_terms = qb_gateway.add_accounts_batch(
             company_file_path, comparison.excel_only
         )
 
-        conflicts: list[dict[str, object]] = []
+        # Build conflicts list: name mismatches + items missing from Excel
+        conflicts: List[Dict[str, object]] = []
         conflicts.extend(
             _conflict_to_dict(conflict) for conflict in comparison.conflicts
         )
@@ -82,15 +106,18 @@ def run_accounts(
             _missing_in_excel_conflict(term) for term in comparison.qb_only
         )
 
-        report_payload["added_accounts"] = [_account_to_dict(account) for account in added_accounts]
+        # Populate the report payload with results
+        report_payload["added_terms"] = [_account_to_dict(term) for term in added_terms]
         report_payload["conflicts"] = conflicts
 
     except Exception as exc:  # pragma: no cover - behaviour verified via tests
+        # On any error, capture the message and mark the report as failure
         report_payload["status"] = "error"
         report_payload["error"] = str(exc)
 
+    # Persist the report to disk and return its path
     write_report(report_payload, report_path)
     return report_path
 
 
-__all__ = ["run_accounts", "DEFAULT_REPORT_NAME"]
+__all__ = ["run_chart_of_accounts", "DEFAULT_REPORT_NAME"]

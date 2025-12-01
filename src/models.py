@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from typing import Literal
 
 SourceLiteral = Literal["excel", "quickbooks"]
-ConflictReason = Literal["name_mismatch", "missing_in_excel", "missing_in_quickbooks"]
+ConflictReason = Literal["data_mismatch", "missing_in_excel", "missing_in_quickbooks"]
 
 
 @dataclass(slots=True)
@@ -14,7 +14,7 @@ class Account:
     """Represents an account synchronised between Excel and QuickBooks."""
 
     AccountType: str
-    number: int
+    number: str
     name: str
     id: str
     source: SourceLiteral
@@ -30,8 +30,16 @@ class Conflict:
 
     AccountType: str
     id: str
+
+    excel_AccountType: str
+    qb_AccountType: str
+
     excel_name: str | None
     qb_name: str | None
+
+    excel_number: str | None
+    qb_number: str | None
+
     reason: ConflictReason
 
 
