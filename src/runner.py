@@ -9,7 +9,7 @@ report summarising the outcome.
 from __future__ import annotations
 
 from pathlib import Path  # Filesystem path handling
-from typing import Dict, List  # Type annotations for clarity
+from typing import Dict, List, Iterable  # Type annotations for clarity
 
 from . import compare, excel_reader, qb_gateway  # Local modules used in orchestration
 from .models import Conflict, Account  # Domain types
@@ -50,8 +50,28 @@ def _missing_in_excel_conflict(term: Account) -> Dict[str, object]:
         "record_id": term.id,
         "excel_name": None,
         "qb_name": term.name,
+        "excel_number": None,
+        "qb_number": term.number,
+        "excel_type": None,
+        "qb_type": term.AccountType,
         "reason": "missing_in_excel",
     }
+
+def _count_matching_terms(
+    excel_terms: List[Account], qb_terms: List[Account]
+) -> int:
+    """Return the number of terms that exist in both sources with identical data."""
+
+    excel_by_id = {term.id: term for term in excel_terms}
+    qb_by_id = {term.id: term for term in qb_terms}
+
+    matches = 0
+    for record_id in excel_by_id.keys() & qb_by_id.keys():
+        excel_term = excel_by_id[record_id]
+        qb_term = qb_by_id[record_id]
+        if excel_term.name == qb_term.name and excel_term.number == qb_term.number and excel_term.AccountType == qb_term.AccountType:
+            matches += 1
+    return matches
 
 
 def run_chart_of_accounts(
@@ -79,8 +99,9 @@ def run_chart_of_accounts(
     report_payload: Dict[str, object] = {
         "status": "success",
         "generated_at": iso_timestamp(),
-        "added_terms": [],
+        "added_chart_of_accounts": [],
         "conflicts": [],
+        "same_accounts": 0,
         "error": None,
     }
 
@@ -107,8 +128,9 @@ def run_chart_of_accounts(
         )
 
         # Populate the report payload with results
-        report_payload["added_terms"] = [_account_to_dict(term) for term in added_terms]
+        report_payload["added_chart_of_accounts"] = [_account_to_dict(term) for term in added_terms]
         report_payload["conflicts"] = conflicts
+        report_payload["same_accounts"] = _count_matching_terms(excel_terms, qb_terms)
 
     except Exception as exc:  # pragma: no cover - behaviour verified via tests
         # On any error, capture the message and mark the report as failure
@@ -120,4 +142,4 @@ def run_chart_of_accounts(
     return report_path
 
 
-__all__ = ["run_chart_of_accounts", "DEFAULT_REPORT_NAME"]
+__all__ = ["run_chart_of_accounts",  "DEFAULT_REPORT_NAME"]

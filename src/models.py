@@ -28,7 +28,6 @@ class Account:
 class Conflict:
     """Describes a discrepancy between Excel and QuickBooks accounts."""
 
-    AccountType: str
     id: str
 
     excel_AccountType: str
