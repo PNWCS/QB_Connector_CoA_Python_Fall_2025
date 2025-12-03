@@ -5,14 +5,6 @@ This project handles the Chart of Accounts synchornisation between an excel work
 
 The results of running the chart of accounts connector are compiled into a json file which will indicate which accounts were added to quickbooks and any conflits that may have occured.
 
-## Setup Project
-Once you forked and cloned the repo, run:
-```bash
-poetry install
-```
-to install dependencies.
-Then write code in the src/ folder.
-
 ## Build
 To build an `.exe` file of the connector:
 
@@ -44,6 +36,5 @@ After building, to run the exe, launch the CLI directly from Command Prompt:
 If you omit `--output`, the report defaults to `chartOfAccounts_report.json` in the current directory. You can also invoke it without `cd` by using the absolute path, e.g.:
 
 ```cmd
-.\src.exe --workbook C:\Users\\MunozJ\QB_Connector_CoA_Python_Fall_2025\company_data.xlsx
---output C:\Users\MunozJ\QB_Connector_CoA_Python_Fall_2025\report.json
+.\src.exe --workbook C:\Users\\MunozJ\QB_Connector_CoA_Python_Fall_2025\company_data.xlsx --output C:\Users\MunozJ\QB_Connector_CoA_Python_Fall_2025\report.json
 ```
