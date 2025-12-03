@@ -111,7 +111,9 @@ def add_accounts_batch(company_file: str | None, terms: list[Account]) -> list[A
         try:
             desc_value = int(term.id)
         except ValueError as exc:
-            raise ValueError(f"id must be numeric for QuickBooks account terms: {term.id}") from exc
+            raise ValueError(
+                f"id must be numeric for QuickBooks account terms: {term.id}"
+            ) from exc
 
         requests.append(
             f"    <AccountAddRq>\n"
@@ -154,7 +156,13 @@ def add_accounts_batch(company_file: str | None, terms: list[Account]) -> list[A
         acc_number = account_ret.findtext("AccountNumber") or ""
         acc_type = (account_ret.findtext("AccountType") or "").strip()
         added_accounts.append(
-            Account(id=id, name=name, number=acc_number, AccountType=acc_type, source="quickbooks")
+            Account(
+                id=id,
+                name=name,
+                number=acc_number,
+                AccountType=acc_type,
+                source="quickbooks",
+            )
         )
 
     return added_accounts
@@ -219,7 +227,7 @@ def add_account(company_file: str | None, term: Account) -> Account:
     acc_type = (account_ret.findtext("AccountType") or term.AccountType).strip()
 
     return Account(
-        id=id, name=name, acc_type=acc_type, acc_number=acc_number, source="quickbooks"
+        id=id, name=name, AccountType=acc_type, number=acc_number, source="quickbooks"
     )
 
 
