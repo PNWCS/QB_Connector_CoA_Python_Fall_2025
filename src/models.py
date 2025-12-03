@@ -7,7 +7,7 @@ from typing import Literal
 
 
 SourceLiteral = Literal["excel", "quickbooks"]
-ConflictReason = Literal["data_mismatch", "only_in_excel"]
+ConflictReason = Literal["data_mismatch", "only_in_quickbooks"]
 
 
 @dataclass(slots=True)

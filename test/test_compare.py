@@ -18,7 +18,7 @@ def test_qb_only_account() -> None:
     # QB-only accounts go into qb_only
     assert len(result.qb_only) == 1
     assert result.qb_only[0].id == "5"
-    assert len(result.conflicts) == 0
+    assert len(result.conflicts) == 1
 
 
 def test_name_mismatch_conflict() -> None:

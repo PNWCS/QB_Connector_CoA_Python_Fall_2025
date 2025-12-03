@@ -141,7 +141,7 @@ def compare_account_types(
                 Conflict(
                     excel_AccountType=excel_term.AccountType,
                     qb_AccountType=qb_term.AccountType,
-                    record_id=qb_term.id,  # Use qb_id or None
+                    record_id=qb_term.id,  # Use excel_id or None
                     excel_number=excel_term.number,
                     qb_number=qb_term.number,
                     excel_name=excel_term.name,
@@ -161,7 +161,7 @@ def compare_account_types(
                 Conflict(
                     excel_AccountType=excel_term.AccountType,
                     qb_AccountType=qb_term.AccountType,
-                    record_id=qb_term.id,  # Use qb_id or None
+                    record_id=qb_term.id,  # Use excel_id or None
                     excel_number=excel_term.number,
                     qb_number=qb_term.number,
                     excel_name=excel_term.name,
@@ -175,13 +175,16 @@ def compare_account_types(
     for nm in set(excel_names.keys()).intersection(qb_names.keys()):
         excel_term = excel_names[nm]
         qb_term = qb_names[nm]
-
+        if conflicted_numbers.__contains__(
+            excel_term.number
+        ) or conflicted_ids.__contains__(excel_term.id):
+            continue
         if excel_term.id != qb_term.id:
             conflicts.append(
                 Conflict(
                     excel_AccountType=excel_term.AccountType,
                     qb_AccountType=qb_term.AccountType,
-                    record_id=qb_term.id,  # Use qb_id or None
+                    record_id=qb_term.id,  # Use excel_id or None
                     excel_number=excel_term.number,
                     qb_number=qb_term.number,
                     excel_name=excel_term.name,
@@ -191,32 +194,30 @@ def compare_account_types(
             )
             conflicted_names.add(nm)
 
-    # Case 4: If not in QuickBooks, add to conflicts
-    for acc_id, excel_term in excel_dict.items():
-        if acc_id not in qb_dict:
+    # Case 4: If not in Excel, add to conflicts
+    for acc_id, qb_term in qb_dict.items():
+        if acc_id not in excel_dict:
             conflicts.append(
                 Conflict(
-                    excel_AccountType=excel_term.AccountType,
-                    qb_AccountType=None,  # Set to None since it does not exist in QuickBooks
-                    record_id=None,
-                    excel_number=excel_term.number,
-                    qb_number=None,
-                    excel_name=excel_term.name,
-                    qb_name=None,
-                    ConflictReason="only_in_excel",
+                    excel_AccountType=None,  # Set to None since it does not exist in Excel
+                    qb_AccountType=qb_term.AccountType,
+                    record_id=qb_term.id,  # Use qb_id or None
+                    excel_number=None,
+                    qb_number=qb_term.number,
+                    excel_name=None,
+                    qb_name=qb_term.name,
+                    ConflictReason="only_in_quickbooks",
                 )
             )
 
-    # Adjust logic for added_chart_of_accounts
+    # Adjust logic for added_chart_of_accounts to exclude accounts with conflicts
     added_chart_of_accounts = [
         term
         for acc_id, term in excel_dict.items()
         if acc_id not in qb_dict
-        or any(
-            conflict.ConflictReason == "only_in_excel"
-            and conflict.excel_number == term.number
-            for conflict in conflicts
-        )
+        and acc_id not in conflicted_ids
+        and term.number not in conflicted_numbers
+        and term.name not in conflicted_names
     ]
 
     qb_only = [term for acc_id, term in qb_dict.items() if acc_id not in excel_dict]
@@ -282,6 +283,7 @@ if __name__ == "__main__":
 
         # 3. Compare accounts
         report = compare_account_types(excel_accounts, qb_accounts)
+
         report_payload["added_chart_of_accounts"] = [
             asdict(acc) for acc in report.added_chart_of_accounts
         ]
@@ -289,12 +291,7 @@ if __name__ == "__main__":
             asdict(conflict) for conflict in report.conflicts
         ]
 
-        # 4. Write JSON report
-        output_path = Path("reports/comparison.json")
-        write_report(report_payload, output_path)
-        print(f"Report written to {output_path}")
-
-        # 5. Add Excel-only accounts into QuickBooks
+        # Add Excel-only accounts into QuickBooks
         if report.added_chart_of_accounts:
             print(
                 f"Adding {len(report.added_chart_of_accounts)} Excel-only accounts into QuickBooks..."
@@ -302,6 +299,11 @@ if __name__ == "__main__":
             added = add_accounts_batch(None, report.added_chart_of_accounts)
             for acc in added:
                 print(f"Added: {acc}")
+
+        # Write JSON report regardless of errors
+        output_path = Path("reports/comparison.json")
+        write_report(report_payload, output_path)
+        print(f"Report written to {output_path}")
 
     except Exception as e:
         report_payload["status"] = "error"
