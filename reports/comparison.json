@@ -1,0 +1,129 @@
+{
+  "status": "success",
+  "generated_at": "2025-12-03T18:48:56.673209+00:00",
+  "added_chart_of_accounts": [],
+  "conflicts": [
+    {
+      "excel_AccountType": "CreditCard",
+      "qb_AccountType": "CreditCard",
+      "record_id": "45",
+      "excel_number": "50156",
+      "qb_number": "50155",
+      "excel_name": "Chase",
+      "qb_name": "Chase",
+      "ConflictReason": "data_mismatch"
+    },
+    {
+      "excel_AccountType": null,
+      "qb_AccountType": "Bank",
+      "record_id": "4",
+      "excel_number": null,
+      "qb_number": "50112",
+      "excel_name": null,
+      "qb_name": "Test",
+      "ConflictReason": "only_in_quickbooks"
+    },
+    {
+      "excel_AccountType": null,
+      "qb_AccountType": "AccountsReceivable",
+      "record_id": "110",
+      "excel_number": null,
+      "qb_number": "11000",
+      "excel_name": null,
+      "qb_name": "Accounts Receivable",
+      "ConflictReason": "only_in_quickbooks"
+    },
+    {
+      "excel_AccountType": null,
+      "qb_AccountType": "AccountsPayable",
+      "record_id": "145",
+      "excel_number": null,
+      "qb_number": "20000",
+      "excel_name": null,
+      "qb_name": "Accounts Payable",
+      "ConflictReason": "only_in_quickbooks"
+    },
+    {
+      "excel_AccountType": null,
+      "qb_AccountType": "OtherCurrentLiability",
+      "record_id": "111",
+      "excel_number": null,
+      "qb_number": "24000",
+      "excel_name": null,
+      "qb_name": "Payroll Liabilities",
+      "ConflictReason": "only_in_quickbooks"
+    },
+    {
+      "excel_AccountType": null,
+      "qb_AccountType": "Equity",
+      "record_id": "103",
+      "excel_number": null,
+      "qb_number": "30000",
+      "excel_name": null,
+      "qb_name": "Opening Balance Equity",
+      "ConflictReason": "only_in_quickbooks"
+    },
+    {
+      "excel_AccountType": null,
+      "qb_AccountType": "Equity",
+      "record_id": "100",
+      "excel_number": null,
+      "qb_number": "32000",
+      "excel_name": null,
+      "qb_name": "Members Equity",
+      "ConflictReason": "only_in_quickbooks"
+    },
+    {
+      "excel_AccountType": null,
+      "qb_AccountType": "Expense",
+      "record_id": "120",
+      "excel_number": null,
+      "qb_number": "66000",
+      "excel_name": null,
+      "qb_name": "Payroll Expenses",
+      "ConflictReason": "only_in_quickbooks"
+    },
+    {
+      "excel_AccountType": null,
+      "qb_AccountType": "Expense",
+      "record_id": "69",
+      "excel_number": null,
+      "qb_number": "77777",
+      "excel_name": null,
+      "qb_name": "Paycheck",
+      "ConflictReason": "only_in_quickbooks"
+    },
+    {
+      "excel_AccountType": null,
+      "qb_AccountType": "OtherIncome",
+      "record_id": "101",
+      "excel_number": null,
+      "qb_number": "10101",
+      "excel_name": null,
+      "qb_name": "Test Account 101",
+      "ConflictReason": "only_in_quickbooks"
+    },
+    {
+      "excel_AccountType": null,
+      "qb_AccountType": "OtherExpense",
+      "record_id": "102",
+      "excel_number": null,
+      "qb_number": "20202",
+      "excel_name": null,
+      "qb_name": "Test Account 102",
+      "ConflictReason": "only_in_quickbooks"
+    },
+    {
+      "excel_AccountType": null,
+      "qb_AccountType": "NonPosting",
+      "record_id": "345",
+      "excel_number": null,
+      "qb_number": "90100",
+      "excel_name": null,
+      "qb_name": "Purchase Orders",
+      "ConflictReason": "only_in_quickbooks"
+    }
+  ],
+  "same_chart_of_account_types": 9,
+  "error": null
+}
