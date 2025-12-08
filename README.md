@@ -3,7 +3,7 @@ Chart of Account Connector
 
 This project handles Chart of Accounts synchornisation between an excel workbook and Quickbooks. The connector takes in an excel workbook file of the format .xlsx , and adds the accounts from the workbook to quickbooks.
 
-The results of running the chart of accounts connector are compiled into a json file which will indicate which accounts were added to quickbooks and any conflits that may have occured between Excel and Quickbooks.
+The results of running the chart of accounts connector are compiled into a json file, which will indicate which accounts were added to quickbooks and any conflits that may have occured between Excel and Quickbooks.
 
 ## Build
 To build an `.exe` file of the connector:
