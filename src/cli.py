@@ -1,0 +1,31 @@
+"""Command-line interface for the chart of accounts synchroniser."""
+
+from __future__ import annotations
+
+import argparse
+import sys
+
+from .runner import run_chart_of_accounts
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Entry point for the chart of accounts synchronisation CLI tool."""
+    parser = argparse.ArgumentParser(
+        description="Synchronise accounts between Excel and QuickBooks"
+    )
+    parser.add_argument(
+        "--workbook",
+        required=True,
+        help="Excel workbook containing the chartofaccount worksheet",
+    )
+    parser.add_argument("--output", help="Optional JSON output path")
+
+    args = parser.parse_args(argv)
+
+    path = run_chart_of_accounts("", args.workbook, output_path=args.output)
+    print(f"Report written to {path}")
+    return 0
+
+
+if __name__ == "__main__":  # pragma: no cover - manual invocation
+    sys.exit(main())

@@ -1,5 +1,5 @@
 [project]
-name = "quickbook-connector"
+name = "src"
 version = "0.1.0"
 description = ""
 authors = [
@@ -18,7 +18,18 @@ dependencies = [
     "pyinstaller (>=6.16.0,<7.0.0)"
 ]
 
-
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+fix = true
+
+[tool.mypy]
+strict = true
+ignore_missing_imports = true
+
+[dependency-groups]
+dev = [
+    "pre-commit (>=4.3.0,<5.0.0)"
+]
