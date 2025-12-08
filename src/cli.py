@@ -1,27 +1,28 @@
-"""Command-line interface for the payment terms synchroniser."""
+"""Command-line interface for the chart of accounts synchroniser."""
 
 from __future__ import annotations
 
 import argparse
 import sys
 
-from .runner import run_payment_terms
+from .runner import run_chart_of_accounts
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Entry point for the chart of accounts synchronisation CLI tool."""
     parser = argparse.ArgumentParser(
-        description="Synchronise payment terms between Excel and QuickBooks"
+        description="Synchronise accounts between Excel and QuickBooks"
     )
     parser.add_argument(
         "--workbook",
         required=True,
-        help="Excel workbook containing the payment_terms worksheet",
+        help="Excel workbook containing the chartofaccount worksheet",
     )
     parser.add_argument("--output", help="Optional JSON output path")
 
     args = parser.parse_args(argv)
 
-    path = run_payment_terms("", args.workbook, output_path=args.output)
+    path = run_chart_of_accounts("", args.workbook, output_path=args.output)
     print(f"Report written to {path}")
     return 0
 
