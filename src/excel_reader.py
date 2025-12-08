@@ -12,16 +12,9 @@ from .models import Account  # Domain model used as output
 
 
 def extract_account(workbook_path: Path) -> List[Account]:
-    """Return payment terms parsed from the Excel workbook.
-
-    Students should implement this function using ``openpyxl``. It must read the
-    ``payment_terms`` worksheet, build :class:`~payment_terms_cli.models.PaymentTerm`
-    instances with ``source="excel"``, and raise :class:`FileNotFoundError`
-    if the workbook cannot be located.
-    """
+    """Return accounts parsed from the Excel workbook."""
     workbook_path = Path(workbook_path)  # Ensure we have a Path instance
     if not workbook_path.exists():  # Validate the file exists
-
         workbook_path = Path(workbook_path)  # Ensure we have a Path instance
     if not workbook_path.exists():  # Validate the file exists
         raise FileNotFoundError(f"Workbook not found: {workbook_path}")
@@ -104,26 +97,7 @@ def extract_account(workbook_path: Path) -> List[Account]:
     finally:
         workbook.close()  # Always close the workbook handle
 
-    return terms  # Return the extracted list of payment terms
+    return terms  # Return the extracted list of accounts
 
 
 __all__ = ["extract_account"]  # Public API
-"""
-if __name__ == "__main__":  # pragma: no cover - manual invocation
-    import sys
-
-    # Allow running as a script: poetry run python payment_terms_cli/excel_reader.py
-    try:
-        terms = extract_account(
-            Path(
-                "C:\\Users\\KieblesD\\Project\\QB_Connector_CoA_Python_Fall_2025\\company_data.xlsx"
-            )
-        )
-        for term in terms:
-            print(term)
-    except Exception as e:
-        print(f"Error: {e}")
-        print("Usage: python src/excel_reader.py <path-to-workbook.xlsx>")
-        sys.exit(1)
-
-"""

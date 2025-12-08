@@ -1,19 +1,12 @@
 {
   "status": "success",
-  "generated_at": "2025-12-03T19:20:41.555572+00:00",
+  "generated_at": "2025-12-03T20:30:56.606224+00:00",
   "added_chart_of_accounts": [
     {
       "id": "51",
       "name": "Farmers",
       "number": "66666",
       "type": "Bank",
-      "source": "quickbooks"
-    },
-    {
-      "id": "52",
-      "name": "Ice Cream",
-      "number": "66667",
-      "type": "OtherExpense",
       "source": "quickbooks"
     },
     {
@@ -26,13 +19,13 @@
   ],
   "conflicts": [
     {
-      "record_id": "1",
-      "excel_name": "Materials",
-      "qb_name": "Accounts Receivable",
-      "excel_number": "50101",
-      "qb_number": "11000",
-      "excel_type": "Bank",
-      "qb_type": "AccountsReceivable",
+      "record_id": "7",
+      "excel_name": "Building",
+      "qb_name": "Sales",
+      "excel_number": "50114",
+      "qb_number": "47900",
+      "excel_type": "OtherCurrentAsset",
+      "qb_type": "Income",
       "reason": "data_mismatch"
     },
     {
@@ -46,6 +39,16 @@
       "reason": "data_mismatch"
     },
     {
+      "record_id": "1",
+      "excel_name": "Materials",
+      "qb_name": "Accounts Receivable",
+      "excel_number": "50101",
+      "qb_number": "11000",
+      "excel_type": "Bank",
+      "qb_type": "AccountsReceivable",
+      "reason": "data_mismatch"
+    },
+    {
       "record_id": "3",
       "excel_name": "Donations",
       "qb_name": "Undeposited Funds",
@@ -53,16 +56,6 @@
       "qb_number": "12000",
       "excel_type": "OtherIncome",
       "qb_type": "OtherCurrentAsset",
-      "reason": "data_mismatch"
-    },
-    {
-      "record_id": "7",
-      "excel_name": "Building",
-      "qb_name": "Sales",
-      "excel_number": "50114",
-      "qb_number": "47900",
-      "excel_type": "OtherCurrentAsset",
-      "qb_type": "Income",
       "reason": "data_mismatch"
     },
     {
@@ -146,6 +139,6 @@
       "reason": "missing_in_excel"
     }
   ],
-  "same_accounts": 3,
+  "same_accounts": 4,
   "error": null
 }

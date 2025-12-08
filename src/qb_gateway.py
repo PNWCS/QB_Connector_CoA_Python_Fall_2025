@@ -242,32 +242,3 @@ def _escape_xml(value: str) -> str:
 
 
 __all__ = ["fetch_accounts", "add_account", "add_accounts_batch"]
-
-
-"""
-if __name__ == "__main__":  # pragma: no cover - manual invocation
-    import sys
-
-
-Simple test invocation to fetch and print accounts.
-
-    try:
-        qb_accounts = fetch_accounts("")
-        for acc in qb_accounts:
-            print(acc)
-    except Exception as e:
-        print(f"Error: {e}")
-        sys.exit(1)
-
-
-
-try:
-    acc1 = Account(id="101", name="Test Account 101", number="10101", AccountType="OtherIncome", source="quickbooks")
-    acc2 = Account(id="102", name="Test Account 102", number="20202", AccountType="OtherExpense", source="quickbooks")
-    added_batch = add_accounts_batch(None, [acc1, acc2])
-    for acc in added_batch:
-        print(f"Added in batch: {acc}")
-except Exception as e:
-        print(f"Error: {e}")
-        sys.exit(1)
-"""

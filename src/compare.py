@@ -54,7 +54,7 @@ def compare_accounts(
           types that may need to be removed from QuickBooks or added to Excel.
 
         - ``conflicts`` (list[Conflict]): Types where the same ``id`` exists
-          in both sources but the ``name`` and/or ``number`` and/or ``AccountType`` 
+          in both sources but the ``name`` and/or ``number`` and/or ``AccountType``
           field differs. Each :class:`~src.models.Conflict` must have:
 
           - id: str Identifier of the account type with the conflict
@@ -69,15 +69,6 @@ def compare_accounts(
           - qb_number: str | None - The number from QuickBooks
 
          reason: ConflictReason - Set to "data_mismatch" to indicate differing data
-
-    **Implementation Requirements:**
-
-    1. Compare types based on their ``id`` field (case-sensitive)
-    2. Build dictionaries or sets for efficient lookup of account types
-    3. Identify ids unique to each source (Excel-only and QB-only)
-    4. For matching ``id`` values, compare the ``name``, ``number``, and ``AccountType`` fields
-    5. If any fields differ, create a Conflict with reason ``"data_mismatch"``
-    6. Return all findings in a ComparisonReport object
 
     **Example:**
 
@@ -102,7 +93,7 @@ def compare_accounts(
             qb_only=[Account(AccountType="LIABILITY", id="4", name="Liability", number="4000", source="quickbooks")],
             conflicts=[id= "2",
                        excel_AccountType="EXPENSE", qb_AccountType="EXPENSE",
-                       excel_name="Expense", qb_name="Expenses", 
+                       excel_name="Expense", qb_name="Expenses",
                        excel_number="2000", qb_number="2000",
                        reason="data_mismatch"]
         )
@@ -124,7 +115,11 @@ def compare_accounts(
         qb_number = qb_dict[aID].number
         excel_atype = excel_dict[aID].AccountType
         qb_atype = qb_dict[aID].AccountType
-        if excel_name != qb_name or excel_number != qb_number or excel_atype != qb_atype:
+        if (
+            excel_name != qb_name
+            or excel_number != qb_number
+            or excel_atype != qb_atype
+        ):
             conflicts.append(
                 Conflict(
                     id=aID,  # Updated to reflect comparison of account types

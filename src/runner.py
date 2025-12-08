@@ -1,8 +1,8 @@
 """High-level orchestration for the payment term CLI.
 
-This module coordinates the end-to-end process of reading payment terms from
-Excel, retrieving existing terms from QuickBooks, comparing both datasets,
-creating any missing terms in QuickBooks, and writing a comprehensive JSON
+This module coordinates the end-to-end process of reading chart of accounts from
+Excel, retrieving existingaccounts from QuickBooks, comparing both datasets,
+creating any missing accounts in QuickBooks, and writing a comprehensive JSON
 report summarising the outcome.
 """
 
@@ -15,7 +15,7 @@ from . import compare, excel_reader, qb_gateway  # Local modules used in orchest
 from .models import Conflict, Account  # Domain types
 from .reporting import iso_timestamp, write_report  # JSON and timestamps
 
-DEFAULT_REPORT_NAME = "payment_terms_report.json"  # Default output filename
+DEFAULT_REPORT_NAME = "chartOfAccounts_report.json"  # Default output filename
 
 
 def _account_to_dict(account: Account) -> Dict[str, str]:
@@ -47,9 +47,9 @@ def _conflict_to_dict(conflict: Conflict) -> Dict[str, object]:
 
 
 def _missing_in_excel_conflict(term: Account) -> Dict[str, object]:
-    """Create a synthetic conflict for terms present only in QuickBooks.
+    """Create a synthetic conflict for accounts present only in QuickBooks.
 
-    In the report, terms that exist in QuickBooks but not Excel are represented
+    In the report, accounts that exist in QuickBooks but not Excel are represented
     as conflicts with reason "missing_in_excel".
     """
     return {
@@ -65,7 +65,7 @@ def _missing_in_excel_conflict(term: Account) -> Dict[str, object]:
 
 
 def _count_matching_terms(excel_terms: List[Account], qb_terms: List[Account]) -> int:
-    """Return the number of terms that exist in both sources with identical data."""
+    """Return the number of accounts that exist in both sources with identical data."""
 
     excel_by_id = {term.id: term for term in excel_terms}
     qb_by_id = {term.id: term for term in qb_terms}
@@ -89,15 +89,15 @@ def run_chart_of_accounts(
     *,
     output_path: str | None = None,
 ) -> Path:
-    """Contract entry point for synchronising payment terms.
+    """Contract entry point for synchronising chart of accounts.
 
     Args:
         company_file_path: Path to the QuickBooks company file. Use an empty
             string to reuse the currently open company file.
         workbook_path: Path to the Excel workbook containing the
-            payment_terms worksheet.
+            chartofaccount worksheet.
         output_path: Optional JSON output path. Defaults to
-            payment_terms_report.json in the current working directory.
+            chartOfAccounts.json in the current working directory.
 
     Returns:
         Path to the generated JSON report.
