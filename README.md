@@ -1,9 +1,9 @@
 Chart of Account Connector
 ===========================
 
-This project handles the Chart of Accounts synchornisation between an excel workbook and Quickbooks. The connector takes in a .xlsx workbook, and adds the accounts from the workbooks to quickbooks.
+This project handles Chart of Accounts synchornisation between an excel workbook and Quickbooks. The connector takes in an excel workbook file of the format .xlsx , and adds the accounts from the workbook to quickbooks.
 
-The results of running the chart of accounts connector are compiled into a json file which will indicate which accounts were added to quickbooks and any conflits that may have occured.
+The results of running the chart of accounts connector are compiled into a json file which will indicate which accounts were added to quickbooks and any conflits that may have occured between Excel and Quickbooks.
 
 ## Build
 To build an `.exe` file of the connector:
@@ -22,7 +22,7 @@ To build an `.exe` file of the connector:
 
 The `--hidden-import` flags ensure PyInstaller includes the Windows COM dependencies needed for QuickBooks integration.
 
-After building, to run the exe, launch the CLI directly from Command Prompt:
+After the exe has been built, in order to run the exe, launch the CLI directly from Command Prompt:
 
 1. Change into the `dist` directory (or reference the full path):
    ```cmd
